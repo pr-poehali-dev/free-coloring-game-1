@@ -393,11 +393,12 @@ function ZoneCanvas({
   onDraw: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const overlayRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const filledPx = useRef(0);
   const totalPx = useRef(1);
   const zoneFilled = useRef(false);
+  const [splashPos, setSplashPos] = useState<{ x: number; y: number } | null>(null);
+  const [splashActive, setSplashActive] = useState(false);
   const zones = getZones(page.id);
   const zone = zones[zoneIndex];
 
@@ -507,7 +508,18 @@ function ZoneCanvas({
         );
         ctx.fill();
         ctx.globalCompositeOperation = "source-over";
-        setTimeout(onZoneFilled, 400);
+
+        // Splash position: center of zone in canvas-display coords
+        const rect2 = canvas.getBoundingClientRect();
+        const displayScaleX = rect2.width / canvas.width;
+        const displayScaleY = rect2.height / canvas.height;
+        setSplashPos({
+          x: zone.cx * canvas.width * displayScaleX,
+          y: zone.cy * canvas.height * displayScaleY,
+        });
+        setSplashActive(true);
+        setTimeout(() => setSplashActive(false), 900);
+        setTimeout(onZoneFilled, 750);
       }
     },
     [color, zone, onZoneFilled, onDraw]
@@ -515,22 +527,150 @@ function ZoneCanvas({
 
   return (
     <div className="relative w-full flex justify-center">
-      <canvas
-        ref={canvasRef}
-        className="canvas-glow rounded-2xl cursor-crosshair touch-none"
-        style={{ maxWidth: "100%", maxHeight: "54vh" }}
-        onMouseDown={() => (isDrawing.current = true)}
-        onMouseUp={() => (isDrawing.current = false)}
-        onMouseLeave={() => (isDrawing.current = false)}
-        onMouseMove={paint}
-        onTouchStart={(e) => { e.preventDefault(); isDrawing.current = true; }}
-        onTouchEnd={() => (isDrawing.current = false)}
-        onTouchMove={paint}
-      />
+      <div className="relative" style={{ maxWidth: "100%", maxHeight: "54vh" }}>
+        <canvas
+          ref={canvasRef}
+          className="canvas-glow rounded-2xl cursor-crosshair touch-none block"
+          style={{ maxWidth: "100%", maxHeight: "54vh" }}
+          onMouseDown={() => (isDrawing.current = true)}
+          onMouseUp={() => (isDrawing.current = false)}
+          onMouseLeave={() => (isDrawing.current = false)}
+          onMouseMove={paint}
+          onTouchStart={(e) => { e.preventDefault(); isDrawing.current = true; }}
+          onTouchEnd={() => (isDrawing.current = false)}
+          onTouchMove={paint}
+        />
+        {splashPos && (
+          <PaintSplash
+            x={splashPos.x}
+            y={splashPos.y}
+            color={color}
+            active={splashActive}
+          />
+        )}
+      </div>
       {/* Zone label hint */}
       <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur-sm px-3 py-1 rounded-full font-body text-xs text-primary border border-primary/30">
         ✏️ Раскрась: <strong>{zone.label}</strong>
       </div>
+    </div>
+  );
+}
+
+// ─── PAINT SPLASH ────────────────────────────────────────────────────────────
+
+interface SplashParticle {
+  id: number;
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  size: number;
+  dur: number;
+  color: string;
+  delay: number;
+}
+
+function PaintSplash({ x, y, color, active }: { x: number; y: number; color: string; active: boolean }) {
+  if (!active) return null;
+
+  const particles: SplashParticle[] = Array.from({ length: 18 }, (_, i) => {
+    const angle = (i / 18) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+    const dist = 40 + Math.random() * 90;
+    const size = 6 + Math.random() * 14;
+    // slight color variation
+    const variants = [color, color + "cc", color + "99"];
+    return {
+      id: i,
+      x, y,
+      tx: Math.cos(angle) * dist,
+      ty: Math.sin(angle) * dist,
+      size,
+      dur: 0.5 + Math.random() * 0.35,
+      color: variants[i % variants.length],
+      delay: Math.random() * 0.08,
+    };
+  });
+
+  // Extra big blobs
+  const blobs = Array.from({ length: 5 }, (_, i) => {
+    const angle = (i / 5) * Math.PI * 2;
+    const dist = 20 + Math.random() * 40;
+    return {
+      id: i,
+      x: x + Math.cos(angle) * dist,
+      y: y + Math.sin(angle) * dist,
+      size: 18 + Math.random() * 20,
+    };
+  });
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl" style={{ zIndex: 20 }}>
+      {/* Center burst ring */}
+      <div
+        className="splash-ring"
+        style={{
+          left: x,
+          top: y,
+          width: 60,
+          height: 60,
+          borderColor: color,
+          borderWidth: 4,
+          marginLeft: -30,
+          marginTop: -30,
+        } as React.CSSProperties}
+      />
+      <div
+        className="splash-ring"
+        style={{
+          left: x,
+          top: y,
+          width: 100,
+          height: 100,
+          borderColor: color + "88",
+          borderWidth: 3,
+          marginLeft: -50,
+          marginTop: -50,
+          animationDelay: "0.08s",
+        } as React.CSSProperties}
+      />
+
+      {/* Blob splashes */}
+      {blobs.map((b) => (
+        <div
+          key={b.id}
+          className="splash-blob"
+          style={{
+            left: b.x,
+            top: b.y,
+            width: b.size,
+            height: b.size,
+            backgroundColor: color + "dd",
+            animationDelay: `${b.id * 0.04}s`,
+          } as React.CSSProperties}
+        />
+      ))}
+
+      {/* Flying particles */}
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="splash-particle"
+          style={{
+            left: p.x,
+            top: p.y,
+            width: p.size,
+            height: p.size,
+            backgroundColor: p.color,
+            "--tx": `${p.tx}px`,
+            "--ty": `${p.ty}px`,
+            "--dur": `${p.dur}s`,
+            animationDelay: `${p.delay}s`,
+            marginLeft: -p.size / 2,
+            marginTop: -p.size / 2,
+          } as React.CSSProperties}
+        />
+      ))}
     </div>
   );
 }

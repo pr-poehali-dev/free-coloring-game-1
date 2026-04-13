@@ -1538,6 +1538,89 @@ function BottomNav({
   );
 }
 
+// ─── OFFLINE BANNER ──────────────────────────────────────────────────────────
+
+function useOnlineStatus() {
+  const [online, setOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const on  = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online',  on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+  }, []);
+  return online;
+}
+
+function OfflineBanner() {
+  const online = useOnlineStatus();
+  const [dismissed, setDismissed] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  // Show banner when going offline, hide 2s after coming back
+  useEffect(() => {
+    if (!online) {
+      setDismissed(false);
+      setVisible(true);
+    } else {
+      const t = setTimeout(() => setVisible(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [online]);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="fixed top-0 left-0 right-0 z-[90] flex justify-center pointer-events-none"
+      style={{ animation: 'fadeInUp 0.35s ease-out' }}
+    >
+      <div
+        className={`pointer-events-auto mx-4 mt-3 max-w-sm w-full rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xl transition-all duration-500
+          ${online
+            ? 'bg-green-900/90 border border-green-500/40'
+            : 'bg-background/95 border border-destructive/40 backdrop-blur-md'}`}
+        style={{ boxShadow: online ? '0 0 20px rgba(34,197,94,0.3)' : '0 0 20px rgba(239,68,68,0.2)' }}
+      >
+        {/* Icon */}
+        <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-lg
+          ${online ? 'bg-green-500/20' : 'bg-destructive/15'}`}>
+          {online ? '✅' : '🦉'}
+        </div>
+
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <p className={`font-body font-semibold text-sm ${online ? 'text-green-300' : 'text-foreground'}`}>
+            {online ? 'Соединение восстановлено!' : 'Нет интернета'}
+          </p>
+          <p className="font-body text-xs text-muted-foreground leading-tight mt-0.5">
+            {online
+              ? 'Игра работает в полном режиме'
+              : 'Сова не переживает — раскраски работают офлайн 🎨'}
+          </p>
+        </div>
+
+        {/* Dismiss (offline only) */}
+        {!online && !dismissed && (
+          <button
+            onClick={() => { setDismissed(true); setVisible(false); }}
+            className="flex-shrink-0 w-7 h-7 rounded-full bg-muted/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-sm font-bold"
+          >
+            ×
+          </button>
+        )}
+
+        {/* Progress bar (online — auto disappear) */}
+        {online && (
+          <div className="absolute bottom-0 left-0 h-0.5 bg-green-400 rounded-full"
+            style={{ animation: 'progress-shrink 2s linear forwards' }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── SPLASH SCREEN ───────────────────────────────────────────────────────────
 
 function SplashScreen({ onDone }: { onDone: () => void }) {
@@ -1636,6 +1719,13 @@ export default function Index() {
   const [coloringPage, setColoringPage] = useState<(typeof COLORING_PAGES)[0] | null>(null);
   const totalStars = COLORING_PAGES.reduce((acc, p) => acc + p.stars, 0) + 3;
 
+  // Register Service Worker for offline support
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => { /* sw not critical */ });
+    }
+  }, []);
+
   const handleNavigate = (s: string) => {
     setScreen(s);
     if (s !== "coloring") setColoringPage(null);
@@ -1658,6 +1748,7 @@ export default function Index() {
   return (
     <div className="magic-bg min-h-screen flex flex-col relative overflow-hidden">
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      <OfflineBanner />
 
       <StarsBackground />
       <FloatingParticles />

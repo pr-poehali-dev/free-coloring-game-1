@@ -317,6 +317,16 @@
   animation: scaleIn 0.4s ease-out forwards;
 }
 
+/* Offline banner progress bar */
+@keyframes progress-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
 /* Paint splash particles */
 .splash-particle {
   position: absolute;

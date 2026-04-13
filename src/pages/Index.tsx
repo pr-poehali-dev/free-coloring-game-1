@@ -253,28 +253,6 @@ const COLORING_PAGES: {
   { id:45, title:"Карамельное яблоко",category:"Еда",       difficulty:"Легко",  emoji:"🍎",  image:IMG.food, completed:false, stars:0 },
   { id:46, title:"Мясное барбекю",    category:"Еда",       difficulty:"Сложно", emoji:"🍖",  image:IMG.food, completed:false, stars:0 },
 
-  // ── Мороженое ─────────────────────────────────────────────────────────────
-  { id:47, title:"Рожок с шариком",      category:"Мороженое", difficulty:"Легко",  emoji:"🍦",  image:IMG.icecream, completed:false, stars:0 },
-  { id:48, title:"Клубничный санди",     category:"Мороженое", difficulty:"Легко",  emoji:"🍓",  image:IMG.icecream, completed:false, stars:0 },
-  { id:49, title:"Шоколадный рожок",     category:"Мороженое", difficulty:"Легко",  emoji:"🍫",  image:IMG.icecream, completed:false, stars:0 },
-  { id:50, title:"Радужный сорбет",      category:"Мороженое", difficulty:"Средне", emoji:"🌈",  image:IMG.icecream, completed:false, stars:0 },
-  { id:51, title:"Мороженое на палочке", category:"Мороженое", difficulty:"Легко",  emoji:"🍡",  image:IMG.icecream, completed:false, stars:0 },
-  { id:52, title:"Банановый сплит",      category:"Мороженое", difficulty:"Средне", emoji:"🍌",  image:IMG.icecream, completed:false, stars:0 },
-  { id:53, title:"Вишнёвый санди",       category:"Мороженое", difficulty:"Средне", emoji:"🍒",  image:IMG.icecream, completed:false, stars:0 },
-  { id:54, title:"Ванильный рожок 3в1",  category:"Мороженое", difficulty:"Легко",  emoji:"⭐",  image:IMG.icecream, completed:false, stars:0 },
-  { id:55, title:"Мятное мороженое",     category:"Мороженое", difficulty:"Легко",  emoji:"🌿",  image:IMG.icecream, completed:false, stars:0 },
-  { id:56, title:"Карамельный санди",    category:"Мороженое", difficulty:"Средне", emoji:"🍮",  image:IMG.icecream, completed:false, stars:0 },
-  { id:57, title:"Парфе с фруктами",     category:"Мороженое", difficulty:"Сложно", emoji:"🥂",  image:IMG.icecream, completed:false, stars:0 },
-  { id:58, title:"Единорог-санди",       category:"Мороженое", difficulty:"Сложно", emoji:"🦄",  image:IMG.icecream, completed:false, stars:0 },
-  { id:59, title:"Манго-сорбет",         category:"Мороженое", difficulty:"Легко",  emoji:"🥭",  image:IMG.icecream, completed:false, stars:0 },
-  { id:60, title:"Тройной рожок",        category:"Мороженое", difficulty:"Средне", emoji:"🎠",  image:IMG.icecream, completed:false, stars:0 },
-  { id:61, title:"Арбузный лёд",         category:"Мороженое", difficulty:"Легко",  emoji:"🍉",  image:IMG.icecream, completed:false, stars:0 },
-  { id:62, title:"Мороженое-торт",       category:"Мороженое", difficulty:"Сложно", emoji:"🎂",  image:IMG.icecream, completed:false, stars:0 },
-  { id:63, title:"Кокосовое парфе",      category:"Мороженое", difficulty:"Средне", emoji:"🥥",  image:IMG.icecream, completed:false, stars:0 },
-  { id:64, title:"Ягодный рожок",        category:"Мороженое", difficulty:"Легко",  emoji:"🫐",  image:IMG.icecream, completed:false, stars:0 },
-  { id:65, title:"Молочный коктейль",    category:"Мороженое", difficulty:"Средне", emoji:"🥛",  image:IMG.icecream, completed:false, stars:0 },
-  { id:66, title:"Замороженный йогурт",  category:"Мороженое", difficulty:"Легко",  emoji:"🍧",  image:IMG.icecream, completed:false, stars:0 },
-
   // ── Животные ──────────────────────────────────────────────────────────────
   { id:67, title:"Милый щенок",          category:"Животные", difficulty:"Легко",  emoji:"🐶", image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/d40c0a8d-0750-436e-8cc0-c94b5d756785.jpg", completed:false, stars:0 },
   { id:68, title:"Пушистый котёнок",     category:"Животные", difficulty:"Легко",  emoji:"🐱", image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/88ec23bd-fbf1-42df-835b-2c7a04a8ddc4.jpg", completed:false, stars:0 },
@@ -1141,7 +1119,6 @@ const CATEGORY_META: Record<string, { emoji: string; color: string }> = {
   "Сказочные":  { emoji: "🦄", color: "bg-purple-500/80 text-white" },
   "Машинки":    { emoji: "🏎️", color: "bg-red-500/80 text-white" },
   "Еда":        { emoji: "🍕", color: "bg-orange-500/80 text-white" },
-  "Мороженое":  { emoji: "🍦", color: "bg-pink-500/80 text-white" },
   "Животные":   { emoji: "🐶", color: "bg-green-500/80 text-white" },
   "Растения":   { emoji: "🌿", color: "bg-teal-500/80 text-white" },
 };
@@ -1157,7 +1134,7 @@ function CatalogScreen({
   const [difficultyFilter, setDifficultyFilter] = useState("Все");
   const [search, setSearch] = useState("");
 
-  const categories = ["Все", "Сказочные", "Машинки", "Еда", "Мороженое", "Животные", "Растения"];
+  const categories = ["Все", "Сказочные", "Машинки", "Еда", "Животные", "Растения"];
   const difficulties = ["Все", "Легко", "Средне", "Сложно"];
 
   const filtered = COLORING_PAGES.filter((p) => {

@@ -581,8 +581,8 @@ function ZoneCanvas({
     return dx * dx + dy * dy <= 1;
   };
 
-  const paint = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const paintCoords = useCallback(
+    (clientX: number, clientY: number) => {
       if (!isDrawing.current || zoneFilled.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -592,15 +592,6 @@ function ZoneCanvas({
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
       const scaleY = canvas.height / rect.height;
-
-      let clientX: number, clientY: number;
-      if ("touches" in e) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
 
       const x = (clientX - rect.left) * scaleX;
       const y = (clientY - rect.top) * scaleY;
@@ -650,20 +641,51 @@ function ZoneCanvas({
     [color, zone, onZoneFilled, onDraw]
   );
 
+  const paint = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      paintCoords(e.clientX, e.clientY);
+    },
+    [paintCoords]
+  );
+
+  // Register touch events as passive to avoid scroll blocking
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      isDrawing.current = true;
+      if (e.cancelable) e.preventDefault();
+    };
+    const onTouchEnd = () => { isDrawing.current = false; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        paintCoords(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    };
+
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: true });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: true });
+
+    return () => {
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchend', onTouchEnd);
+      canvas.removeEventListener('touchmove', onTouchMove);
+    };
+  }, [paintCoords]);
+
   return (
     <div className="relative w-full flex justify-center">
       <div className="relative" style={{ maxWidth: "100%", maxHeight: "54vh" }}>
         <canvas
           ref={canvasRef}
           className="canvas-glow rounded-2xl cursor-crosshair touch-none block"
-          style={{ maxWidth: "100%", maxHeight: "54vh" }}
+          style={{ maxWidth: "100%", maxHeight: "54vh", touchAction: "none" }}
           onMouseDown={() => (isDrawing.current = true)}
           onMouseUp={() => (isDrawing.current = false)}
           onMouseLeave={() => (isDrawing.current = false)}
           onMouseMove={paint}
-          onTouchStart={(e) => { e.preventDefault(); isDrawing.current = true; }}
-          onTouchEnd={() => (isDrawing.current = false)}
-          onTouchMove={paint}
         />
         {splashPos && (
           <PaintSplash

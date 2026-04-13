@@ -1538,9 +1538,100 @@ function BottomNav({
   );
 }
 
+// ─── SPLASH SCREEN ───────────────────────────────────────────────────────────
+
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<"in" | "hold" | "out">("in");
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("hold"), 400);
+    const t2 = setTimeout(() => setPhase("out"), 2000);
+    const t3 = setTimeout(() => onDone(), 2500);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [onDone]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] magic-bg flex flex-col items-center justify-center"
+      style={{
+        transition: "opacity 0.5s ease",
+        opacity: phase === "out" ? 0 : 1,
+        pointerEvents: phase === "out" ? "none" : "all",
+      }}
+    >
+      <StarsBackground />
+
+      {/* Owl icon */}
+      <div
+        className="relative mb-6"
+        style={{
+          transition: "transform 0.6s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease",
+          transform: phase === "in" ? "scale(0.5) translateY(30px)" : "scale(1) translateY(0)",
+          opacity: phase === "in" ? 0 : 1,
+        }}
+      >
+        <div className="w-36 h-36 rounded-[2.5rem] overflow-hidden glow-purple shadow-2xl border-2 border-primary/30">
+          <img
+            src="https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/64b2263d-4846-440c-b045-a5ea54535907.jpg"
+            alt="Раскраска для детей"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        {/* Sparkles around icon */}
+        {["✨","⭐","💫","🌟"].map((s, i) => (
+          <span
+            key={i}
+            className="absolute text-lg animate-sparkle"
+            style={{
+              top: `${[-10, 10, -5, 70][i]}%`,
+              left: `${[-15, 85, 90, -10][i]}%`,
+              animationDelay: `${i * 0.3}s`,
+            }}
+          >{s}</span>
+        ))}
+      </div>
+
+      {/* Title */}
+      <div
+        style={{
+          transition: "transform 0.6s ease 0.2s, opacity 0.5s ease 0.2s",
+          transform: phase === "in" ? "translateY(20px)" : "translateY(0)",
+          opacity: phase === "in" ? 0 : 1,
+        }}
+        className="text-center px-8"
+      >
+        <h1 className="font-display text-4xl font-bold text-primary text-glow-gold leading-tight mb-2">
+          Раскраска<br />для детей
+        </h1>
+        <p className="font-body text-muted-foreground text-sm">
+          🦉 112 волшебных раскрасок
+        </p>
+      </div>
+
+      {/* Loading dots */}
+      <div
+        className="flex gap-2 mt-10"
+        style={{
+          transition: "opacity 0.4s ease 0.4s",
+          opacity: phase === "in" ? 0 : 1,
+        }}
+      >
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-2 h-2 rounded-full bg-primary animate-bounce"
+            style={{ animationDelay: `${i * 0.15}s` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── APP ─────────────────────────────────────────────────────────────────────
 
 export default function Index() {
+  const [showSplash, setShowSplash] = useState(true);
   const [screen, setScreen] = useState("home");
   const [coloringPage, setColoringPage] = useState<(typeof COLORING_PAGES)[0] | null>(null);
   const totalStars = COLORING_PAGES.reduce((acc, p) => acc + p.stars, 0) + 3;
@@ -1566,6 +1657,8 @@ export default function Index() {
 
   return (
     <div className="magic-bg min-h-screen flex flex-col relative overflow-hidden">
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+
       <StarsBackground />
       <FloatingParticles />
 

@@ -1,0 +1,35 @@
+{
+  "name": "Раскраска для детей",
+  "short_name": "Раскраска",
+  "description": "Волшебная раскраска с сказочными персонажами, животными, едой и машинками. 112 раскрасок, расслабляющие звуки природы, награды и достижения!",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a0a2e",
+  "theme_color": "#1a0a2e",
+  "lang": "ru",
+  "categories": ["games", "kids", "education"],
+  "icons": [
+    {
+      "src": "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/64b2263d-4846-440c-b045-a5ea54535907.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/64b2263d-4846-440c-b045-a5ea54535907.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/aaa71646-b444-4480-b309-ce626869c8f3.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg",
+      "label": "Главный экран игры"
+    }
+  ],
+  "prefer_related_applications": false
+}

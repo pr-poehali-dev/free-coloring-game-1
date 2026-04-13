@@ -138,67 +138,149 @@ function useAudio(soundId: string, enabled: boolean) {
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
-const COLORING_PAGES = [
-  {
-    id: 1,
-    title: "Единорог в лесу",
-    category: "Природа",
-    difficulty: "Легко",
-    emoji: "🦄",
-    image: "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/67cef695-d5ed-4ae4-87a9-bb6458486857.jpg",
-    completed: false,
-    stars: 0,
-  },
-  {
-    id: 2,
-    title: "Дракон и замок",
-    category: "Приключения",
-    difficulty: "Средне",
-    emoji: "🐉",
-    image: "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/2c1adf01-02de-41a1-815f-83fe5e70e9d6.jpg",
-    completed: true,
-    stars: 3,
-  },
-  {
-    id: 3,
-    title: "Русалочка",
-    category: "Море",
-    difficulty: "Средне",
-    emoji: "🧜‍♀️",
-    image: "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/ffb99e1f-164d-47a9-a26e-e94459e5a4f5.jpg",
-    completed: false,
-    stars: 0,
-  },
-  {
-    id: 4,
-    title: "Ведьма на метле",
-    category: "Магия",
-    difficulty: "Сложно",
-    emoji: "🧙‍♀️",
-    image: "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/3c8c36e3-ce7a-4a1f-8ead-539a73517fdf.jpg",
-    completed: false,
-    stars: 0,
-  },
-  {
-    id: 5,
-    title: "Феи и эльфы",
-    category: "Волшебство",
-    difficulty: "Легко",
-    emoji: "🧚",
-    image: "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/67cef695-d5ed-4ae4-87a9-bb6458486857.jpg",
-    completed: false,
-    stars: 0,
-  },
-  {
-    id: 6,
-    title: "Волшебный замок",
-    category: "Архитектура",
-    difficulty: "Сложно",
-    emoji: "🏰",
-    image: "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/2c1adf01-02de-41a1-815f-83fe5e70e9d6.jpg",
-    completed: false,
-    stars: 0,
-  },
+// Image URLs shortcuts
+const IMG = {
+  unicorn:  "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/67cef695-d5ed-4ae4-87a9-bb6458486857.jpg",
+  dragon:   "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/2c1adf01-02de-41a1-815f-83fe5e70e9d6.jpg",
+  mermaid:  "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/ffb99e1f-164d-47a9-a26e-e94459e5a4f5.jpg",
+  witch:    "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/3c8c36e3-ce7a-4a1f-8ead-539a73517fdf.jpg",
+  car:      "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/f8e9f6a7-9607-4046-921b-30c2f250a431.jpg",
+  food:     "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/1d031119-5bd0-4af9-8a5f-ad36f391275b.jpg",
+  icecream: "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/3bc51471-b1a9-4ec4-9268-98eeb82755bd.jpg",
+  animals:  "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/17e4cd4a-0331-4716-b491-3f569665eee2.jpg",
+  plants:   "https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/51cd15fe-a75c-45b7-8d5f-b207dab26887.jpg",
+};
+
+type Difficulty = "Легко" | "Средне" | "Сложно";
+
+const COLORING_PAGES: {
+  id: number; title: string; category: string;
+  difficulty: Difficulty; emoji: string; image: string;
+  completed: boolean; stars: number;
+}[] = [
+  // ── Сказочные (оригинальные) ──────────────────────────────────────────────
+  { id:1,  title:"Единорог в лесу",      category:"Сказочные", difficulty:"Легко",  emoji:"🦄",  image:IMG.unicorn,  completed:false, stars:0 },
+  { id:2,  title:"Дракон и замок",       category:"Сказочные", difficulty:"Средне", emoji:"🐉",  image:IMG.dragon,   completed:true,  stars:3 },
+  { id:3,  title:"Русалочка",            category:"Сказочные", difficulty:"Средне", emoji:"🧜‍♀️",image:IMG.mermaid,  completed:false, stars:0 },
+  { id:4,  title:"Ведьма на метле",      category:"Сказочные", difficulty:"Сложно", emoji:"🧙‍♀️",image:IMG.witch,    completed:false, stars:0 },
+  { id:5,  title:"Феи и эльфы",          category:"Сказочные", difficulty:"Легко",  emoji:"🧚",  image:IMG.unicorn,  completed:false, stars:0 },
+  { id:6,  title:"Волшебный замок",      category:"Сказочные", difficulty:"Сложно", emoji:"🏰",  image:IMG.dragon,   completed:false, stars:0 },
+
+  // ── Машинки ───────────────────────────────────────────────────────────────
+  { id:7,  title:"Гоночная машина",      category:"Машинки",   difficulty:"Легко",  emoji:"🏎️",  image:IMG.car, completed:false, stars:0 },
+  { id:8,  title:"Пожарная машина",      category:"Машинки",   difficulty:"Легко",  emoji:"🚒",  image:IMG.car, completed:false, stars:0 },
+  { id:9,  title:"Полицейская машина",   category:"Машинки",   difficulty:"Легко",  emoji:"🚓",  image:IMG.car, completed:false, stars:0 },
+  { id:10, title:"Грузовик монстр",      category:"Машинки",   difficulty:"Средне", emoji:"🚛",  image:IMG.car, completed:false, stars:0 },
+  { id:11, title:"Школьный автобус",     category:"Машинки",   difficulty:"Легко",  emoji:"🚌",  image:IMG.car, completed:false, stars:0 },
+  { id:12, title:"Спортивный кабриолет", category:"Машинки",   difficulty:"Средне", emoji:"🚗",  image:IMG.car, completed:false, stars:0 },
+  { id:13, title:"Экскаватор",           category:"Машинки",   difficulty:"Средне", emoji:"🚜",  image:IMG.car, completed:false, stars:0 },
+  { id:14, title:"Трактор",             category:"Машинки",   difficulty:"Легко",  emoji:"🚜",  image:IMG.car, completed:false, stars:0 },
+  { id:15, title:"Вертолёт",            category:"Машинки",   difficulty:"Средне", emoji:"🚁",  image:IMG.car, completed:false, stars:0 },
+  { id:16, title:"Ракета",              category:"Машинки",   difficulty:"Средне", emoji:"🚀",  image:IMG.car, completed:false, stars:0 },
+  { id:17, title:"Паровоз",            category:"Машинки",   difficulty:"Легко",  emoji:"🚂",  image:IMG.car, completed:false, stars:0 },
+  { id:18, title:"Самолёт",            category:"Машинки",   difficulty:"Средне", emoji:"✈️",  image:IMG.car, completed:false, stars:0 },
+  { id:19, title:"Яхта",               category:"Машинки",   difficulty:"Средне", emoji:"⛵",  image:IMG.car, completed:false, stars:0 },
+  { id:20, title:"Формула 1",          category:"Машинки",   difficulty:"Сложно", emoji:"🏁",  image:IMG.car, completed:false, stars:0 },
+  { id:21, title:"Мотоцикл",           category:"Машинки",   difficulty:"Легко",  emoji:"🏍️",  image:IMG.car, completed:false, stars:0 },
+  { id:22, title:"Субмарина",          category:"Машинки",   difficulty:"Средне", emoji:"🤿",  image:IMG.car, completed:false, stars:0 },
+  { id:23, title:"Дирижабль",          category:"Машинки",   difficulty:"Сложно", emoji:"🎈",  image:IMG.car, completed:false, stars:0 },
+  { id:24, title:"Квадроцикл",         category:"Машинки",   difficulty:"Легко",  emoji:"🛻",  image:IMG.car, completed:false, stars:0 },
+  { id:25, title:"Скорая помощь",      category:"Машинки",   difficulty:"Легко",  emoji:"🚑",  image:IMG.car, completed:false, stars:0 },
+  { id:26, title:"Кран строительный",  category:"Машинки",   difficulty:"Сложно", emoji:"🏗️",  image:IMG.car, completed:false, stars:0 },
+
+  // ── Еда ───────────────────────────────────────────────────────────────────
+  { id:27, title:"Пицца Маргарита",    category:"Еда",       difficulty:"Легко",  emoji:"🍕",  image:IMG.food, completed:false, stars:0 },
+  { id:28, title:"Большой бургер",     category:"Еда",       difficulty:"Легко",  emoji:"🍔",  image:IMG.food, completed:false, stars:0 },
+  { id:29, title:"Суши и роллы",       category:"Еда",       difficulty:"Средне", emoji:"🍣",  image:IMG.food, completed:false, stars:0 },
+  { id:30, title:"Праздничный торт",   category:"Еда",       difficulty:"Средне", emoji:"🎂",  image:IMG.food, completed:false, stars:0 },
+  { id:31, title:"Капкейки",           category:"Еда",       difficulty:"Легко",  emoji:"🧁",  image:IMG.food, completed:false, stars:0 },
+  { id:32, title:"Пончики",            category:"Еда",       difficulty:"Легко",  emoji:"🍩",  image:IMG.food, completed:false, stars:0 },
+  { id:33, title:"Тако и буррито",     category:"Еда",       difficulty:"Средне", emoji:"🌮",  image:IMG.food, completed:false, stars:0 },
+  { id:34, title:"Рамен",             category:"Еда",       difficulty:"Средне", emoji:"🍜",  image:IMG.food, completed:false, stars:0 },
+  { id:35, title:"Блинчики",          category:"Еда",       difficulty:"Легко",  emoji:"🥞",  image:IMG.food, completed:false, stars:0 },
+  { id:36, title:"Клубничный пирог",  category:"Еда",       difficulty:"Средне", emoji:"🍓",  image:IMG.food, completed:false, stars:0 },
+  { id:37, title:"Вафли с сиропом",   category:"Еда",       difficulty:"Легко",  emoji:"🧇",  image:IMG.food, completed:false, stars:0 },
+  { id:38, title:"Фрукты в корзинке", category:"Еда",       difficulty:"Легко",  emoji:"🍎",  image:IMG.food, completed:false, stars:0 },
+  { id:39, title:"Арбуз",             category:"Еда",       difficulty:"Легко",  emoji:"🍉",  image:IMG.food, completed:false, stars:0 },
+  { id:40, title:"Шоколадный фонтан", category:"Еда",       difficulty:"Сложно", emoji:"🍫",  image:IMG.food, completed:false, stars:0 },
+  { id:41, title:"Чаепитие",          category:"Еда",       difficulty:"Средне", emoji:"🍵",  image:IMG.food, completed:false, stars:0 },
+  { id:42, title:"Пирожное Макарон",  category:"Еда",       difficulty:"Средне", emoji:"🍬",  image:IMG.food, completed:false, stars:0 },
+  { id:43, title:"Лимонад",           category:"Еда",       difficulty:"Легко",  emoji:"🍋",  image:IMG.food, completed:false, stars:0 },
+  { id:44, title:"Паста с соусом",    category:"Еда",       difficulty:"Средне", emoji:"🍝",  image:IMG.food, completed:false, stars:0 },
+  { id:45, title:"Карамельное яблоко",category:"Еда",       difficulty:"Легко",  emoji:"🍎",  image:IMG.food, completed:false, stars:0 },
+  { id:46, title:"Мясное барбекю",    category:"Еда",       difficulty:"Сложно", emoji:"🍖",  image:IMG.food, completed:false, stars:0 },
+
+  // ── Мороженое ─────────────────────────────────────────────────────────────
+  { id:47, title:"Рожок с шариком",      category:"Мороженое", difficulty:"Легко",  emoji:"🍦",  image:IMG.icecream, completed:false, stars:0 },
+  { id:48, title:"Клубничный санди",     category:"Мороженое", difficulty:"Легко",  emoji:"🍓",  image:IMG.icecream, completed:false, stars:0 },
+  { id:49, title:"Шоколадный рожок",     category:"Мороженое", difficulty:"Легко",  emoji:"🍫",  image:IMG.icecream, completed:false, stars:0 },
+  { id:50, title:"Радужный сорбет",      category:"Мороженое", difficulty:"Средне", emoji:"🌈",  image:IMG.icecream, completed:false, stars:0 },
+  { id:51, title:"Мороженое на палочке", category:"Мороженое", difficulty:"Легко",  emoji:"🍡",  image:IMG.icecream, completed:false, stars:0 },
+  { id:52, title:"Банановый сплит",      category:"Мороженое", difficulty:"Средне", emoji:"🍌",  image:IMG.icecream, completed:false, stars:0 },
+  { id:53, title:"Вишнёвый санди",       category:"Мороженое", difficulty:"Средне", emoji:"🍒",  image:IMG.icecream, completed:false, stars:0 },
+  { id:54, title:"Ванильный рожок 3в1",  category:"Мороженое", difficulty:"Легко",  emoji:"⭐",  image:IMG.icecream, completed:false, stars:0 },
+  { id:55, title:"Мятное мороженое",     category:"Мороженое", difficulty:"Легко",  emoji:"🌿",  image:IMG.icecream, completed:false, stars:0 },
+  { id:56, title:"Карамельный санди",    category:"Мороженое", difficulty:"Средне", emoji:"🍮",  image:IMG.icecream, completed:false, stars:0 },
+  { id:57, title:"Парфе с фруктами",     category:"Мороженое", difficulty:"Сложно", emoji:"🥂",  image:IMG.icecream, completed:false, stars:0 },
+  { id:58, title:"Единорог-санди",       category:"Мороженое", difficulty:"Сложно", emoji:"🦄",  image:IMG.icecream, completed:false, stars:0 },
+  { id:59, title:"Манго-сорбет",         category:"Мороженое", difficulty:"Легко",  emoji:"🥭",  image:IMG.icecream, completed:false, stars:0 },
+  { id:60, title:"Тройной рожок",        category:"Мороженое", difficulty:"Средне", emoji:"🎠",  image:IMG.icecream, completed:false, stars:0 },
+  { id:61, title:"Арбузный лёд",         category:"Мороженое", difficulty:"Легко",  emoji:"🍉",  image:IMG.icecream, completed:false, stars:0 },
+  { id:62, title:"Мороженое-торт",       category:"Мороженое", difficulty:"Сложно", emoji:"🎂",  image:IMG.icecream, completed:false, stars:0 },
+  { id:63, title:"Кокосовое парфе",      category:"Мороженое", difficulty:"Средне", emoji:"🥥",  image:IMG.icecream, completed:false, stars:0 },
+  { id:64, title:"Ягодный рожок",        category:"Мороженое", difficulty:"Легко",  emoji:"🫐",  image:IMG.icecream, completed:false, stars:0 },
+  { id:65, title:"Молочный коктейль",    category:"Мороженое", difficulty:"Средне", emoji:"🥛",  image:IMG.icecream, completed:false, stars:0 },
+  { id:66, title:"Замороженный йогурт",  category:"Мороженое", difficulty:"Легко",  emoji:"🍧",  image:IMG.icecream, completed:false, stars:0 },
+
+  // ── Животные ──────────────────────────────────────────────────────────────
+  { id:67, title:"Милый щенок",          category:"Животные", difficulty:"Легко",  emoji:"🐶", image:IMG.animals, completed:false, stars:0 },
+  { id:68, title:"Пушистый котёнок",     category:"Животные", difficulty:"Легко",  emoji:"🐱", image:IMG.animals, completed:false, stars:0 },
+  { id:69, title:"Зайчик",              category:"Животные", difficulty:"Легко",  emoji:"🐰", image:IMG.animals, completed:false, stars:0 },
+  { id:70, title:"Медвежонок",          category:"Животные", difficulty:"Легко",  emoji:"🐻", image:IMG.animals, completed:false, stars:0 },
+  { id:71, title:"Маленькая лиса",      category:"Животные", difficulty:"Средне", emoji:"🦊", image:IMG.animals, completed:false, stars:0 },
+  { id:72, title:"Пингвин",            category:"Животные", difficulty:"Легко",  emoji:"🐧", image:IMG.animals, completed:false, stars:0 },
+  { id:73, title:"Жираф",             category:"Животные", difficulty:"Средне", emoji:"🦒", image:IMG.animals, completed:false, stars:0 },
+  { id:74, title:"Слон",              category:"Животные", difficulty:"Средне", emoji:"🐘", image:IMG.animals, completed:false, stars:0 },
+  { id:75, title:"Лев-царь",          category:"Животные", difficulty:"Средне", emoji:"🦁", image:IMG.animals, completed:false, stars:0 },
+  { id:76, title:"Тигрёнок",          category:"Животные", difficulty:"Средне", emoji:"🐯", image:IMG.animals, completed:false, stars:0 },
+  { id:77, title:"Дельфин",           category:"Животные", difficulty:"Средне", emoji:"🐬", image:IMG.animals, completed:false, stars:0 },
+  { id:78, title:"Сова",             category:"Животные", difficulty:"Легко",  emoji:"🦉", image:IMG.animals, completed:false, stars:0 },
+  { id:79, title:"Фламинго",          category:"Животные", difficulty:"Средне", emoji:"🦩", image:IMG.animals, completed:false, stars:0 },
+  { id:80, title:"Бабочка",           category:"Животные", difficulty:"Легко",  emoji:"🦋", image:IMG.animals, completed:false, stars:0 },
+  { id:81, title:"Черепаха",          category:"Животные", difficulty:"Легко",  emoji:"🐢", image:IMG.animals, completed:false, stars:0 },
+  { id:82, title:"Енот",             category:"Животные", difficulty:"Средне", emoji:"🦝", image:IMG.animals, completed:false, stars:0 },
+  { id:83, title:"Панда",            category:"Животные", difficulty:"Легко",  emoji:"🐼", image:IMG.animals, completed:false, stars:0 },
+  { id:84, title:"Лягушка",          category:"Животные", difficulty:"Легко",  emoji:"🐸", image:IMG.animals, completed:false, stars:0 },
+  { id:85, title:"Хомячок",          category:"Животные", difficulty:"Легко",  emoji:"🐹", image:IMG.animals, completed:false, stars:0 },
+  { id:86, title:"Крокодил",         category:"Животные", difficulty:"Сложно", emoji:"🐊", image:IMG.animals, completed:false, stars:0 },
+  { id:87, title:"Осьминог",         category:"Животные", difficulty:"Средне", emoji:"🐙", image:IMG.animals, completed:false, stars:0 },
+  { id:88, title:"Попугай",          category:"Животные", difficulty:"Средне", emoji:"🦜", image:IMG.animals, completed:false, stars:0 },
+  { id:89, title:"Лошадка пони",     category:"Животные", difficulty:"Средне", emoji:"🐴", image:IMG.animals, completed:false, stars:0 },
+  { id:90, title:"Медуза",           category:"Животные", difficulty:"Средне", emoji:"🪼", image:IMG.animals, completed:false, stars:0 },
+  { id:91, title:"Олень в лесу",     category:"Животные", difficulty:"Сложно", emoji:"🦌", image:IMG.animals, completed:false, stars:0 },
+  { id:92, title:"Зебра",            category:"Животные", difficulty:"Сложно", emoji:"🦓", image:IMG.animals, completed:false, stars:0 },
+
+  // ── Растения ──────────────────────────────────────────────────────────────
+  { id:93,  title:"Подсолнух",          category:"Растения", difficulty:"Легко",  emoji:"🌻", image:IMG.plants, completed:false, stars:0 },
+  { id:94,  title:"Кактус в горшке",    category:"Растения", difficulty:"Легко",  emoji:"🌵", image:IMG.plants, completed:false, stars:0 },
+  { id:95,  title:"Роза",              category:"Растения", difficulty:"Средне", emoji:"🌹", image:IMG.plants, completed:false, stars:0 },
+  { id:96,  title:"Тюльпаны",          category:"Растения", difficulty:"Легко",  emoji:"🌷", image:IMG.plants, completed:false, stars:0 },
+  { id:97,  title:"Монстера",          category:"Растения", difficulty:"Средне", emoji:"🪴", image:IMG.plants, completed:false, stars:0 },
+  { id:98,  title:"Баобаб",            category:"Растения", difficulty:"Сложно", emoji:"🌳", image:IMG.plants, completed:false, stars:0 },
+  { id:99,  title:"Сакура",            category:"Растения", difficulty:"Средне", emoji:"🌸", image:IMG.plants, completed:false, stars:0 },
+  { id:100, title:"Лаванда",           category:"Растения", difficulty:"Легко",  emoji:"💜", image:IMG.plants, completed:false, stars:0 },
+  { id:101, title:"Орхидея",           category:"Растения", difficulty:"Средне", emoji:"🌺", image:IMG.plants, completed:false, stars:0 },
+  { id:102, title:"Берёза",            category:"Растения", difficulty:"Средне", emoji:"🌲", image:IMG.plants, completed:false, stars:0 },
+  { id:103, title:"Бамбук",            category:"Растения", difficulty:"Средне", emoji:"🎋", image:IMG.plants, completed:false, stars:0 },
+  { id:104, title:"Венерина мухоловка",category:"Растения", difficulty:"Сложно", emoji:"🌿", image:IMG.plants, completed:false, stars:0 },
+  { id:105, title:"Ромашковое поле",   category:"Растения", difficulty:"Легко",  emoji:"🌼", image:IMG.plants, completed:false, stars:0 },
+  { id:106, title:"Лотос на воде",     category:"Растения", difficulty:"Средне", emoji:"🪷", image:IMG.plants, completed:false, stars:0 },
+  { id:107, title:"Клевер",            category:"Растения", difficulty:"Легко",  emoji:"🍀", image:IMG.plants, completed:false, stars:0 },
+  { id:108, title:"Папоротник",        category:"Растения", difficulty:"Средне", emoji:"🌿", image:IMG.plants, completed:false, stars:0 },
+  { id:109, title:"Виноград",          category:"Растения", difficulty:"Средне", emoji:"🍇", image:IMG.plants, completed:false, stars:0 },
+  { id:110, title:"Пальма на пляже",   category:"Растения", difficulty:"Легко",  emoji:"🌴", image:IMG.plants, completed:false, stars:0 },
+  { id:111, title:"Дуб могучий",       category:"Растения", difficulty:"Сложно", emoji:"🌳", image:IMG.plants, completed:false, stars:0 },
+  { id:112, title:"Кувшинка",          category:"Растения", difficulty:"Средне", emoji:"🪷", image:IMG.plants, completed:false, stars:0 },
 ];
 
 const ACHIEVEMENTS = [
@@ -975,38 +1057,100 @@ function ColoringScreen({
 
 // ─── SCREEN: CATALOG ─────────────────────────────────────────────────────────
 
+const CATEGORY_META: Record<string, { emoji: string; color: string }> = {
+  "Все":        { emoji: "✨", color: "bg-primary text-primary-foreground" },
+  "Сказочные":  { emoji: "🦄", color: "bg-purple-500/80 text-white" },
+  "Машинки":    { emoji: "🏎️", color: "bg-red-500/80 text-white" },
+  "Еда":        { emoji: "🍕", color: "bg-orange-500/80 text-white" },
+  "Мороженое":  { emoji: "🍦", color: "bg-pink-500/80 text-white" },
+  "Животные":   { emoji: "🐶", color: "bg-green-500/80 text-white" },
+  "Растения":   { emoji: "🌿", color: "bg-teal-500/80 text-white" },
+};
+
 function CatalogScreen({
   onSelect,
 }: {
   onSelect: (page: (typeof COLORING_PAGES)[0]) => void;
 }) {
-  const [filter, setFilter] = useState("Все");
-  const categories = ["Все", "Легко", "Средне", "Сложно"];
-  const filtered =
-    filter === "Все" ? COLORING_PAGES : COLORING_PAGES.filter((p) => p.difficulty === filter);
+  const [categoryFilter, setCategoryFilter] = useState("Все");
+  const [difficultyFilter, setDifficultyFilter] = useState("Все");
+  const [search, setSearch] = useState("");
+
+  const categories = ["Все", "Сказочные", "Машинки", "Еда", "Мороженое", "Животные", "Растения"];
+  const difficulties = ["Все", "Легко", "Средне", "Сложно"];
+
+  const filtered = COLORING_PAGES.filter((p) => {
+    const byCategory = categoryFilter === "Все" || p.category === categoryFilter;
+    const byDifficulty = difficultyFilter === "Все" || p.difficulty === difficultyFilter;
+    const bySearch = search === "" || p.title.toLowerCase().includes(search.toLowerCase());
+    return byCategory && byDifficulty && bySearch;
+  });
 
   return (
     <div className="relative z-10 px-4 pt-4 pb-8">
-      <div className="text-center mb-6">
+      <div className="text-center mb-4">
         <h2 className="font-display text-3xl font-bold text-primary text-glow-gold">
           Каталог раскрасок
         </h2>
         <p className="font-body text-muted-foreground text-sm mt-1">
-          Выбери свой волшебный мир
+          {COLORING_PAGES.length} волшебных раскрасок
         </p>
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-        {categories.map((cat) => (
+      {/* Search */}
+      <div className="relative mb-4">
+        <input
+          type="text"
+          placeholder="🔍 Поиск раскраски..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-muted/60 border border-border rounded-xl px-4 py-2.5 font-body text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-lg leading-none">×</button>
+        )}
+      </div>
+
+      {/* Category chips */}
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none">
+        {categories.map((cat) => {
+          const meta = CATEGORY_META[cat];
+          const active = categoryFilter === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-body font-semibold transition-all ${active ? meta.color + " glow-gold scale-105" : "bg-muted/60 text-muted-foreground hover:text-foreground"}`}
+            >
+              <span>{meta.emoji}</span>
+              <span>{cat}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Difficulty tabs */}
+      <div className="flex gap-1.5 mb-5">
+        {difficulties.map((d) => (
           <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-body font-medium transition-all ${filter === cat ? "bg-primary text-primary-foreground glow-gold" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+            key={d}
+            onClick={() => setDifficultyFilter(d)}
+            className={`flex-shrink-0 px-3 py-1 rounded-lg text-xs font-body font-medium transition-all ${difficultyFilter === d ? "bg-secondary/40 text-secondary border border-secondary/50" : "bg-muted/40 text-muted-foreground hover:text-foreground"}`}
           >
-            {cat}
+            {d === "Легко" ? "🌿" : d === "Средне" ? "⚡" : d === "Сложно" ? "💎" : "🎯"} {d}
           </button>
         ))}
+        <span className="ml-auto font-body text-xs text-muted-foreground self-center flex-shrink-0">
+          {filtered.length} шт.
+        </span>
       </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-16">
+          <div className="text-5xl mb-3">🔍</div>
+          <p className="font-body text-muted-foreground">Ничего не найдено</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         {filtered.map((page, idx) => (
@@ -1015,7 +1159,7 @@ function CatalogScreen({
             onClick={() => onSelect(page)}
             className="magic-card rounded-2xl overflow-hidden text-left animate-fade-in-up"
             style={{
-              animationDelay: `${idx * 0.08}s`,
+              animationDelay: `${Math.min(idx, 12) * 0.05}s`,
               opacity: 0,
               animationFillMode: "forwards",
             }}
@@ -1292,7 +1436,7 @@ function HomeScreen({ onNavigate }: { onNavigate: (screen: string) => void }) {
               Начать раскрашивать
             </h3>
             <p className="font-body text-sm text-muted-foreground">
-              {COLORING_PAGES.length} волшебных раскрасок
+              {COLORING_PAGES.length} волшебных раскрасок · 6 тем
             </p>
           </div>
           <Icon name="ChevronRight" size={20} className="text-primary" />
@@ -1301,7 +1445,7 @@ function HomeScreen({ onNavigate }: { onNavigate: (screen: string) => void }) {
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { emoji: "🎨", label: "Каталог", desc: `${COLORING_PAGES.length} картин`, screen: "catalog" },
+          { emoji: "🎨", label: "Каталог", desc: `${COLORING_PAGES.length} раскрасок`, screen: "catalog" },
           { emoji: "🏆", label: "Награды", desc: "2 разблокировано", screen: "achievements" },
           { emoji: "⚙️", label: "Настройки", desc: "Звук и сложность", screen: "settings" },
         ].map((item) => (

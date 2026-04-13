@@ -326,25 +326,82 @@ function Header({
   );
 }
 
-// ─── CANVAS COLORING ─────────────────────────────────────────────────────────
+// ─── ZONE COLORING ENGINE ────────────────────────────────────────────────────
 
-function ColoringCanvas({
+// Each page has 4 zones defined as {cx, cy, rx, ry} ellipses (relative 0..1)
+const ZONES_MAP: Record<number, { cx: number; cy: number; rx: number; ry: number; label: string }[]> = {
+  1: [
+    { cx: 0.5,  cy: 0.22, rx: 0.22, ry: 0.18, label: "Грива" },
+    { cx: 0.5,  cy: 0.5,  rx: 0.28, ry: 0.22, label: "Тело" },
+    { cx: 0.3,  cy: 0.72, rx: 0.15, ry: 0.14, label: "Ноги" },
+    { cx: 0.72, cy: 0.68, rx: 0.18, ry: 0.16, label: "Хвост" },
+  ],
+  2: [
+    { cx: 0.5,  cy: 0.18, rx: 0.2,  ry: 0.16, label: "Голова" },
+    { cx: 0.5,  cy: 0.45, rx: 0.3,  ry: 0.22, label: "Крылья" },
+    { cx: 0.28, cy: 0.7,  rx: 0.2,  ry: 0.18, label: "Замок" },
+    { cx: 0.72, cy: 0.72, rx: 0.18, ry: 0.16, label: "Хвост" },
+  ],
+  3: [
+    { cx: 0.5,  cy: 0.2,  rx: 0.2,  ry: 0.16, label: "Волосы" },
+    { cx: 0.5,  cy: 0.44, rx: 0.25, ry: 0.2,  label: "Хвост" },
+    { cx: 0.28, cy: 0.68, rx: 0.2,  ry: 0.16, label: "Кораллы" },
+    { cx: 0.72, cy: 0.65, rx: 0.18, ry: 0.15, label: "Рыбки" },
+  ],
+  4: [
+    { cx: 0.5,  cy: 0.18, rx: 0.18, ry: 0.15, label: "Шляпа" },
+    { cx: 0.5,  cy: 0.42, rx: 0.25, ry: 0.2,  label: "Плащ" },
+    { cx: 0.4,  cy: 0.68, rx: 0.22, ry: 0.16, label: "Метла" },
+    { cx: 0.72, cy: 0.6,  rx: 0.18, ry: 0.15, label: "Зелье" },
+  ],
+  5: [
+    { cx: 0.5,  cy: 0.2,  rx: 0.2,  ry: 0.16, label: "Крылья" },
+    { cx: 0.5,  cy: 0.46, rx: 0.26, ry: 0.2,  label: "Платье" },
+    { cx: 0.28, cy: 0.7,  rx: 0.2,  ry: 0.15, label: "Цветы" },
+    { cx: 0.72, cy: 0.7,  rx: 0.18, ry: 0.15, label: "Эльф" },
+  ],
+  6: [
+    { cx: 0.5,  cy: 0.15, rx: 0.25, ry: 0.14, label: "Башни" },
+    { cx: 0.5,  cy: 0.42, rx: 0.32, ry: 0.22, label: "Стены" },
+    { cx: 0.25, cy: 0.72, rx: 0.2,  ry: 0.16, label: "Ворота" },
+    { cx: 0.75, cy: 0.7,  rx: 0.18, ry: 0.15, label: "Флаги" },
+  ],
+};
+
+function getZones(pageId: number) {
+  return ZONES_MAP[pageId] ?? ZONES_MAP[1];
+}
+
+function pickThreeColors(): string[] {
+  const shuffled = [...COLORS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 3);
+}
+
+// ─── ZONE CANVAS ─────────────────────────────────────────────────────────────
+
+function ZoneCanvas({
   page,
-  selectedColor,
-  brushSize,
-  onProgress,
+  zoneIndex,
+  color,
+  onZoneFilled,
   onDraw,
 }: {
   page: (typeof COLORING_PAGES)[0];
-  selectedColor: string;
-  brushSize: number;
-  onProgress: (p: number) => void;
+  zoneIndex: number;
+  color: string;
+  onZoneFilled: () => void;
   onDraw: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
-  const coloredArea = useRef(0);
+  const filledPx = useRef(0);
+  const totalPx = useRef(1);
+  const zoneFilled = useRef(false);
+  const zones = getZones(page.id);
+  const zone = zones[zoneIndex];
 
+  // Load image
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -357,9 +414,34 @@ function ColoringCanvas({
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
+
+      // Draw dim overlay everywhere except active zone
+      ctx.save();
+      ctx.fillStyle = "rgba(10,5,25,0.55)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Cut out active zone (ellipse)
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.ellipse(
+        zone.cx * canvas.width,
+        zone.cy * canvas.height,
+        zone.rx * canvas.width,
+        zone.ry * canvas.height,
+        0, 0, Math.PI * 2
+      );
+      ctx.fill();
+      ctx.restore();
+
+      // Estimate zone pixels
+      totalPx.current = Math.round(
+        Math.PI * zone.rx * canvas.width * zone.ry * canvas.height
+      );
+      filledPx.current = 0;
+      zoneFilled.current = false;
     };
     img.src = page.image;
-  }, [page]);
+  }, [page, zoneIndex, zone]);
 
   const hexToRgb = (hex: string) => ({
     r: parseInt(hex.slice(1, 3), 16),
@@ -367,9 +449,15 @@ function ColoringCanvas({
     b: parseInt(hex.slice(5, 7), 16),
   });
 
+  const insideZone = (x: number, y: number, w: number, h: number) => {
+    const dx = (x - zone.cx * w) / (zone.rx * w);
+    const dy = (y - zone.cy * h) / (zone.ry * h);
+    return dx * dx + dy * dy <= 1;
+  };
+
   const paint = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-      if (!isDrawing.current) return;
+      if (!isDrawing.current || zoneFilled.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
@@ -391,18 +479,38 @@ function ColoringCanvas({
       const x = (clientX - rect.left) * scaleX;
       const y = (clientY - rect.top) * scaleY;
 
-      const { r, g, b } = hexToRgb(selectedColor);
+      if (!insideZone(x, y, canvas.width, canvas.height)) return;
+
+      const brushR = 22 * scaleX;
+      const { r, g, b } = hexToRgb(color);
       ctx.globalCompositeOperation = "multiply";
-      ctx.fillStyle = `rgba(${r},${g},${b},0.55)`;
+      ctx.fillStyle = `rgba(${r},${g},${b},0.6)`;
       ctx.beginPath();
-      ctx.arc(x, y, brushSize * scaleX, 0, Math.PI * 2);
+      ctx.arc(x, y, brushR, 0, Math.PI * 2);
       ctx.fill();
 
-      coloredArea.current = Math.min(coloredArea.current + brushSize * 8, 10000);
-      onProgress(Math.min(Math.round((coloredArea.current / 10000) * 100), 100));
+      filledPx.current = Math.min(filledPx.current + 800, totalPx.current);
       onDraw();
+
+      if (filledPx.current >= totalPx.current * 0.72 && !zoneFilled.current) {
+        zoneFilled.current = true;
+        // Flood-fill remaining area with color for satisfying finish
+        ctx.globalCompositeOperation = "multiply";
+        ctx.fillStyle = `rgba(${r},${g},${b},0.45)`;
+        ctx.beginPath();
+        ctx.ellipse(
+          zone.cx * canvas.width,
+          zone.cy * canvas.height,
+          zone.rx * canvas.width,
+          zone.ry * canvas.height,
+          0, 0, Math.PI * 2
+        );
+        ctx.fill();
+        ctx.globalCompositeOperation = "source-over";
+        setTimeout(onZoneFilled, 400);
+      }
     },
-    [selectedColor, brushSize, onProgress, onDraw]
+    [color, zone, onZoneFilled, onDraw]
   );
 
   return (
@@ -410,15 +518,19 @@ function ColoringCanvas({
       <canvas
         ref={canvasRef}
         className="canvas-glow rounded-2xl cursor-crosshair touch-none"
-        style={{ maxWidth: "100%", maxHeight: "60vh" }}
+        style={{ maxWidth: "100%", maxHeight: "54vh" }}
         onMouseDown={() => (isDrawing.current = true)}
         onMouseUp={() => (isDrawing.current = false)}
         onMouseLeave={() => (isDrawing.current = false)}
         onMouseMove={paint}
-        onTouchStart={() => (isDrawing.current = true)}
+        onTouchStart={(e) => { e.preventDefault(); isDrawing.current = true; }}
         onTouchEnd={() => (isDrawing.current = false)}
         onTouchMove={paint}
       />
+      {/* Zone label hint */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-background/70 backdrop-blur-sm px-3 py-1 rounded-full font-body text-xs text-primary border border-primary/30">
+        ✏️ Раскрась: <strong>{zone.label}</strong>
+      </div>
     </div>
   );
 }
@@ -443,6 +555,70 @@ function SoundWave({ active }: { active: boolean }) {
   );
 }
 
+// ─── COLOR CHOICE PANEL ──────────────────────────────────────────────────────
+
+function ColorChoicePanel({
+  colors,
+  chosen,
+  onChoose,
+  zoneLabel,
+}: {
+  colors: string[];
+  chosen: string | null;
+  onChoose: (c: string) => void;
+  zoneLabel: string;
+}) {
+  return (
+    <div className="px-6 pt-5 pb-4 flex flex-col items-center gap-4">
+      <p className="font-body text-sm text-muted-foreground text-center">
+        Выбери цвет для <span className="text-foreground font-semibold">«{zoneLabel}»</span>
+      </p>
+      <div className="flex gap-5 justify-center">
+        {colors.map((c) => (
+          <button
+            key={c}
+            onClick={() => onChoose(c)}
+            className={`relative transition-all duration-200 rounded-full
+              ${chosen === c
+                ? "w-16 h-16 border-4 border-white glow-gold scale-110"
+                : "w-14 h-14 border-2 border-transparent hover:scale-105 opacity-80 hover:opacity-100"
+              }`}
+            style={{ backgroundColor: c, boxShadow: chosen === c ? `0 0 24px ${c}` : `0 0 8px ${c}88` }}
+          >
+            {chosen === c && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center text-xs text-green-600 font-bold shadow">✓</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── ZONE DONE OVERLAY ───────────────────────────────────────────────────────
+
+function ZoneDoneOverlay({ label, onNext, isLast }: { label: string; onNext: () => void; isLast: boolean }) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center pb-16 pointer-events-none">
+      <div className="pointer-events-auto magic-card rounded-3xl px-8 py-5 text-center glow-gold animate-scale-in mx-4 flex flex-col items-center gap-3">
+        <div className="w-14 h-14 rounded-full achievement-badge flex items-center justify-center text-3xl shadow-lg">✓</div>
+        <div>
+          <p className="font-display text-xl font-bold text-primary">«{label}» раскрашена!</p>
+          <p className="font-body text-xs text-muted-foreground mt-0.5">
+            {isLast ? "Последняя часть — финал близко!" : "Отлично! Переходим к следующей части"}
+          </p>
+        </div>
+        <button
+          onClick={onNext}
+          className="mt-1 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-body font-semibold text-sm hover:brightness-110 transition-all"
+        >
+          {isLast ? "Завершить 🎉" : "Дальше →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── SCREEN: COLORING ────────────────────────────────────────────────────────
 
 function ColoringScreen({
@@ -452,114 +628,197 @@ function ColoringScreen({
   page: (typeof COLORING_PAGES)[0];
   onComplete: () => void;
 }) {
-  const [selectedColor, setSelectedColor] = useState("#FF6B9D");
-  const [brushSize, setBrushSize] = useState(15);
-  const [progress, setProgress] = useState(0);
+  const zones = getZones(page.id);
+  const totalZones = zones.length;
+
+  // phase: "choose" | "painting" | "zone_done" | "complete"
+  const [phase, setPhase] = useState<"choose" | "painting" | "zone_done" | "complete">("choose");
+  const [zoneIndex, setZoneIndex] = useState(0);
+  const [threeColors, setThreeColors] = useState<string[]>(() => pickThreeColors());
+  const [chosenColor, setChosenColor] = useState<string | null>(null);
+  const [doneZones, setDoneZones] = useState<{ label: string; color: string }[]>([]);
   const [activeSound, setActiveSound] = useState("brush");
   const [soundOn, setSoundOn] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
 
   const playSound = useAudio(activeSound, soundOn);
 
-  const handleProgress = (p: number) => {
-    setProgress(p);
-    if (p >= 80 && !showComplete) setShowComplete(true);
+  const currentZone = zones[zoneIndex];
+  const isLastZone = zoneIndex === totalZones - 1;
+
+  // When color chosen → start painting
+  const handleChooseColor = (c: string) => {
+    setChosenColor(c);
+    setPhase("painting");
   };
+
+  // Zone filled by drawing
+  const handleZoneFilled = () => {
+    setDoneZones((prev) => [...prev, { label: currentZone.label, color: chosenColor! }]);
+    setPhase("zone_done");
+  };
+
+  // Proceed to next zone or complete
+  const handleNext = () => {
+    if (isLastZone) {
+      setShowComplete(true);
+      setPhase("complete");
+    } else {
+      setZoneIndex((i) => i + 1);
+      setThreeColors(pickThreeColors());
+      setChosenColor(null);
+      setPhase("choose");
+    }
+  };
+
+  const progress = Math.round(((doneZones.length + (phase === "painting" ? 0.5 : 0)) / totalZones) * 100);
 
   return (
     <div className="relative z-10 flex flex-col h-full">
-      <div className="px-6 pt-4 pb-3 text-center">
+      {/* Header */}
+      <div className="px-6 pt-4 pb-2 text-center">
         <h2 className="font-display text-2xl text-primary font-bold">
           {page.emoji} {page.title}
         </h2>
-        <span className="text-muted-foreground font-body text-sm">
-          {page.category} · {page.difficulty}
-        </span>
       </div>
 
-      <div className="px-6 mb-4">
+      {/* Progress bar + zone dots */}
+      <div className="px-6 mb-3">
         <div className="flex justify-between text-xs font-body text-muted-foreground mb-1.5">
-          <span>Прогресс раскраски</span>
+          <span>Часть {Math.min(zoneIndex + 1, totalZones)} из {totalZones}</span>
           <span className="text-primary font-semibold">{progress}%</span>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-2 bg-muted rounded-full overflow-hidden mb-2">
           <div
-            className="h-full magic-progress rounded-full transition-all duration-500"
+            className="h-full magic-progress rounded-full transition-all duration-700"
             style={{ width: `${progress}%` }}
           />
         </div>
+        {/* Zone dots */}
+        <div className="flex gap-2 justify-center">
+          {zones.map((z, i) => {
+            const isDone = i < doneZones.length;
+            const isActive = i === zoneIndex;
+            return (
+              <div
+                key={i}
+                className={`flex items-center justify-center rounded-full text-xs font-body font-semibold transition-all duration-300
+                  ${isDone ? "w-7 h-7 achievement-badge text-white" :
+                    isActive ? "w-7 h-7 border-2 border-primary text-primary bg-primary/10" :
+                    "w-6 h-6 border border-muted text-muted-foreground bg-muted/30"}`}
+                style={isDone ? { boxShadow: `0 0 10px ${doneZones[i].color}88` } : {}}
+              >
+                {isDone ? "✓" : i + 1}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
+      {/* Canvas */}
       <div className="px-4 flex-1 min-h-0">
-        <ColoringCanvas
-          page={page}
-          selectedColor={selectedColor}
-          brushSize={brushSize}
-          onProgress={handleProgress}
-          onDraw={playSound}
-        />
-      </div>
-
-      <div className="px-4 pt-4 pb-6 space-y-4">
-        <div className="flex flex-wrap gap-2 justify-center">
-          {COLORS.map((color) => (
-            <button
-              key={color}
-              className={`color-btn w-8 h-8 rounded-full border-2 ${selectedColor === color ? "active border-white" : "border-transparent"}`}
-              style={{ backgroundColor: color }}
-              onClick={() => setSelectedColor(color)}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Icon name="Circle" size={10} className="text-muted-foreground" />
-          <input
-            type="range"
-            min={5}
-            max={40}
-            value={brushSize}
-            onChange={(e) => setBrushSize(Number(e.target.value))}
-            className="flex-1 accent-yellow-400"
+        {phase !== "choose" && (
+          <ZoneCanvas
+            key={`${page.id}-${zoneIndex}`}
+            page={page}
+            zoneIndex={zoneIndex}
+            color={chosenColor!}
+            onZoneFilled={handleZoneFilled}
+            onDraw={playSound}
           />
-          <Icon name="Circle" size={18} className="text-muted-foreground" />
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <button
-            onClick={() => setSoundOn(!soundOn)}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body transition-all ${soundOn ? "bg-primary/20 text-primary border border-primary/30" : "bg-muted text-muted-foreground"}`}
-          >
-            {soundOn ? <SoundWave active={soundOn} /> : <Icon name="VolumeX" size={14} />}
-          </button>
-          {SOUNDS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setActiveSound(s.id)}
-              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-body transition-all ${activeSound === s.id && soundOn ? "bg-secondary/30 text-secondary border border-secondary/40 glow-purple" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
-            >
-              <span>{s.emoji}</span>
-              <span>{s.label}</span>
-              {activeSound === s.id && soundOn && (
-                <SoundWave active={true} />
-              )}
-            </button>
-          ))}
-        </div>
+        )}
+        {phase === "choose" && (
+          <div className="relative w-full flex justify-center h-full items-center">
+            <div className="canvas-glow rounded-2xl overflow-hidden" style={{ maxHeight: "54vh", maxWidth: "100%" }}>
+              <img
+                src={page.image}
+                alt={page.title}
+                className="object-cover w-full"
+                style={{ maxHeight: "54vh", filter: "brightness(0.4) blur(1px)" }}
+              />
+            </div>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
+              <span className="text-4xl animate-float">🎨</span>
+              <p className="font-display text-xl font-bold text-primary text-center px-6">
+                Выбери цвет для<br />«{currentZone.label}»
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Color choice or sound panel */}
+      {phase === "choose" && (
+        <ColorChoicePanel
+          colors={threeColors}
+          chosen={chosenColor}
+          onChoose={handleChooseColor}
+          zoneLabel={currentZone.label}
+        />
+      )}
+
+      {phase === "painting" && (
+        <div className="px-4 pb-4 pt-3 flex items-center justify-between">
+          {/* Active color swatch */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-full border-2 border-white shadow-lg"
+              style={{ backgroundColor: chosenColor!, boxShadow: `0 0 12px ${chosenColor}` }}
+            />
+            <span className="font-body text-sm text-muted-foreground">Рисуй по зоне ✏️</span>
+          </div>
+          {/* Sound controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSoundOn(!soundOn)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-body transition-all ${soundOn ? "bg-primary/20 text-primary border border-primary/30" : "bg-muted text-muted-foreground"}`}
+            >
+              {soundOn ? <SoundWave active={true} /> : <Icon name="VolumeX" size={13} />}
+            </button>
+            <select
+              value={activeSound}
+              onChange={(e) => setActiveSound(e.target.value)}
+              className="bg-muted text-muted-foreground rounded-full px-2 py-1.5 text-xs font-body border border-border outline-none"
+            >
+              {SOUNDS.map((s) => (
+                <option key={s.id} value={s.id}>{s.emoji} {s.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Zone done overlay */}
+      {phase === "zone_done" && (
+        <ZoneDoneOverlay
+          label={currentZone.label}
+          onNext={handleNext}
+          isLast={isLastZone}
+        />
+      )}
+
+      {/* Complete overlay */}
       {showComplete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-scale-in">
           <div className="magic-card rounded-3xl p-8 text-center max-w-xs mx-4 glow-gold">
             <div className="text-6xl mb-4 animate-float">🎉</div>
-            <h3 className="font-display text-3xl font-bold text-primary mb-2">Великолепно!</h3>
+            <h3 className="font-display text-3xl font-bold text-primary mb-3">Шедевр готов!</h3>
+            {/* Show colored zones */}
+            <div className="flex justify-center gap-2 mb-4 flex-wrap">
+              {doneZones.map((z, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <div className="w-7 h-7 rounded-full border-2 border-white/50" style={{ backgroundColor: z.color }} />
+                  <span className="font-body text-xs text-muted-foreground">{z.label}</span>
+                </div>
+              ))}
+            </div>
             <div className="flex justify-center gap-1 mb-4">
               <span className="text-2xl">⭐</span>
               <span className="text-2xl">⭐</span>
               <span className="text-2xl">⭐</span>
             </div>
             <p className="font-body text-muted-foreground text-sm mb-6">
-              Ты получила 3 звезды и открыла достижение!
+              Все {totalZones} части раскрашены! +3 звезды
             </p>
             <button
               onClick={onComplete}

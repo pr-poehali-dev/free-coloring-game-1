@@ -136,6 +136,49 @@ function useAudio(soundId: string, enabled: boolean) {
   return play;
 }
 
+// ─── PROGRESS (localStorage) ─────────────────────────────────────────────────
+
+const PROGRESS_KEY = "raskraska_progress_v1";
+
+type ProgressMap = Record<number, { completed: boolean; stars: number }>;
+
+function loadProgress(): ProgressMap {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveProgress(map: ProgressMap) {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(map));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+function useProgress() {
+  const [progress, setProgress] = useState<ProgressMap>(() => loadProgress());
+
+  const markComplete = useCallback((id: number, stars: number) => {
+    setProgress((prev) => {
+      const next = { ...prev, [id]: { completed: true, stars } };
+      saveProgress(next);
+      return next;
+    });
+  }, []);
+
+  const getPage = useCallback(
+    (id: number) => progress[id] ?? { completed: false, stars: 0 },
+    [progress]
+  );
+
+  const totalStars = Object.values(progress).reduce((acc, p) => acc + p.stars, 0);
+  const completedCount = Object.values(progress).filter((p) => p.completed).length;
+
+  return { progress, markComplete, getPage, totalStars, completedCount };
+}
+
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
 // Image URLs shortcuts
@@ -845,10 +888,12 @@ function ZoneDoneOverlay({ label, onNext, isLast }: { label: string; onNext: () 
 
 function ColoringScreen({
   page,
+  pageProgress,
   onComplete,
 }: {
   page: (typeof COLORING_PAGES)[0];
-  onComplete: () => void;
+  pageProgress: { completed: boolean; stars: number };
+  onComplete: (stars: number) => void;
 }) {
   const zones = getZones(page.id);
   const totalZones = zones.length;
@@ -893,10 +938,22 @@ function ColoringScreen({
     }
   };
 
+
+
   const progress = Math.round(((doneZones.length + (phase === "painting" ? 0.5 : 0)) / totalZones) * 100);
 
   return (
     <div className="relative z-10 flex flex-col h-full">
+      {/* Already done badge */}
+      {pageProgress.completed && phase !== "complete" && (
+        <div className="mx-4 mt-3 mb-1 rounded-xl bg-yellow-500/15 border border-yellow-500/30 px-4 py-2 flex items-center gap-2">
+          <span className="text-base">⭐</span>
+          <span className="font-body text-xs text-yellow-300 font-semibold">
+            Уже раскрашено! Можно пройти снова и обновить рекорд
+          </span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="px-6 pt-4 pb-2 text-center">
         <h2 className="font-display text-2xl text-primary font-bold">
@@ -1043,7 +1100,7 @@ function ColoringScreen({
               Все {totalZones} части раскрашены! +3 звезды
             </p>
             <button
-              onClick={onComplete}
+              onClick={() => onComplete(3)}
               className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-body font-semibold text-sm hover:brightness-110 transition-all"
             >
               В каталог
@@ -1069,8 +1126,10 @@ const CATEGORY_META: Record<string, { emoji: string; color: string }> = {
 
 function CatalogScreen({
   onSelect,
+  getPage,
 }: {
   onSelect: (page: (typeof COLORING_PAGES)[0]) => void;
+  getPage: (id: number) => { completed: boolean; stars: number };
 }) {
   const [categoryFilter, setCategoryFilter] = useState("Все");
   const [difficultyFilter, setDifficultyFilter] = useState("Все");
@@ -1153,7 +1212,9 @@ function CatalogScreen({
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        {filtered.map((page, idx) => (
+        {filtered.map((page, idx) => {
+          const pg = getPage(page.id);
+          return (
           <button
             key={page.id}
             onClick={() => onSelect(page)}
@@ -1166,7 +1227,7 @@ function CatalogScreen({
           >
             <div className="relative aspect-square bg-white overflow-hidden">
               <img src={page.image} alt={page.title} className="w-full h-full object-cover" />
-              {page.completed && (
+              {pg.completed && (
                 <div className="absolute inset-0 bg-secondary/20 flex items-center justify-center">
                   <span className="text-3xl">✅</span>
                 </div>
@@ -1192,7 +1253,7 @@ function CatalogScreen({
                   {[1, 2, 3].map((s) => (
                     <span
                       key={s}
-                      className={`text-xs ${s <= page.stars ? "text-yellow-400" : "text-muted"}`}
+                      className={`text-xs ${s <= pg.stars ? "text-yellow-400" : "text-muted"}`}
                     >
                       ★
                     </span>
@@ -1201,7 +1262,8 @@ function CatalogScreen({
               </div>
             </div>
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -1209,8 +1271,7 @@ function CatalogScreen({
 
 // ─── SCREEN: ACHIEVEMENTS ────────────────────────────────────────────────────
 
-function AchievementsScreen({ totalStars }: { totalStars: number }) {
-  const completedCount = COLORING_PAGES.filter((p) => p.completed).length;
+function AchievementsScreen({ totalStars, completedCount }: { totalStars: number; completedCount: number }) {
   const maxStars = COLORING_PAGES.length * 3;
 
   return (
@@ -1717,7 +1778,7 @@ export default function Index() {
   const [showSplash, setShowSplash] = useState(true);
   const [screen, setScreen] = useState("home");
   const [coloringPage, setColoringPage] = useState<(typeof COLORING_PAGES)[0] | null>(null);
-  const totalStars = COLORING_PAGES.reduce((acc, p) => acc + p.stars, 0) + 3;
+  const { markComplete, getPage, totalStars, completedCount } = useProgress();
 
   // Register Service Worker for offline support
   useEffect(() => {
@@ -1745,6 +1806,11 @@ export default function Index() {
     }
   };
 
+  const handleComplete = (stars: number) => {
+    if (coloringPage) markComplete(coloringPage.id, stars);
+    handleNavigate("catalog");
+  };
+
   return (
     <div className="magic-bg min-h-screen flex flex-col relative overflow-hidden">
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
@@ -1758,11 +1824,15 @@ export default function Index() {
 
         <main className="flex-1 overflow-y-auto">
           {screen === "home" && <HomeScreen onNavigate={handleNavigate} />}
-          {screen === "catalog" && <CatalogScreen onSelect={handleSelectPage} />}
+          {screen === "catalog" && <CatalogScreen onSelect={handleSelectPage} getPage={getPage} />}
           {screen === "coloring" && coloringPage && (
-            <ColoringScreen page={coloringPage} onComplete={() => handleNavigate("catalog")} />
+            <ColoringScreen
+              page={coloringPage}
+              pageProgress={getPage(coloringPage.id)}
+              onComplete={handleComplete}
+            />
           )}
-          {screen === "achievements" && <AchievementsScreen totalStars={totalStars} />}
+          {screen === "achievements" && <AchievementsScreen totalStars={totalStars} completedCount={completedCount} />}
           {screen === "settings" && <SettingsScreen />}
         </main>
 

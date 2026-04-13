@@ -1,6 +1,141 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 
+// ─── AUDIO ENGINE ────────────────────────────────────────────────────────────
+
+function createAudioContext(): AudioContext | null {
+  try {
+     
+    return new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+  } catch {
+    return null;
+  }
+}
+
+function playBrushSound(ctx: AudioContext) {
+  const bufferSize = ctx.sampleRate * 0.12;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+  }
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.value = 3000 + Math.random() * 2000;
+  filter.Q.value = 0.5;
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.18, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start();
+}
+
+function playWaterDrop(ctx: AudioContext) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+
+  osc.type = "sine";
+  const baseFreq = 800 + Math.random() * 600;
+  osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.4, ctx.currentTime + 0.25);
+
+  filter.type = "lowpass";
+  filter.frequency.value = 2000;
+
+  gain.gain.setValueAtTime(0.22, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.3);
+
+  // Second harmonic drop
+  const osc2 = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+  osc2.type = "sine";
+  osc2.frequency.setValueAtTime(baseFreq * 1.6, ctx.currentTime + 0.04);
+  osc2.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, ctx.currentTime + 0.2);
+  gain2.gain.setValueAtTime(0.1, ctx.currentTime + 0.04);
+  gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+  osc2.connect(gain2);
+  gain2.connect(ctx.destination);
+  osc2.start(ctx.currentTime + 0.04);
+  osc2.stop(ctx.currentTime + 0.2);
+}
+
+function playForestRustle(ctx: AudioContext) {
+  const bufferSize = ctx.sampleRate * 0.4;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+  }
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 800 + Math.random() * 400;
+  filter.Q.value = 1.5;
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.1);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start();
+}
+
+const SOUND_PLAYERS: Record<string, (ctx: AudioContext) => void> = {
+  brush: playBrushSound,
+  water: playWaterDrop,
+  rain: playWaterDrop,
+  forest: playForestRustle,
+  fire: playForestRustle,
+};
+
+function useAudio(soundId: string, enabled: boolean) {
+  const ctxRef = useRef<AudioContext | null>(null);
+  const lastPlayRef = useRef(0);
+
+  const play = useCallback(() => {
+    if (!enabled) return;
+    const now = Date.now();
+    const minInterval = soundId === "brush" ? 60 : soundId === "water" || soundId === "rain" ? 200 : 150;
+    if (now - lastPlayRef.current < minInterval) return;
+    lastPlayRef.current = now;
+
+    if (!ctxRef.current || ctxRef.current.state === "closed") {
+      ctxRef.current = createAudioContext();
+    }
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+
+    const player = SOUND_PLAYERS[soundId] || playBrushSound;
+    try { player(ctx); } catch (_e) { /* audio not supported */ }
+  }, [soundId, enabled]);
+
+  useEffect(() => {
+    return () => { ctxRef.current?.close(); };
+  }, []);
+
+  return play;
+}
+
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
 const COLORING_PAGES = [
@@ -198,11 +333,13 @@ function ColoringCanvas({
   selectedColor,
   brushSize,
   onProgress,
+  onDraw,
 }: {
   page: (typeof COLORING_PAGES)[0];
   selectedColor: string;
   brushSize: number;
   onProgress: (p: number) => void;
+  onDraw: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
@@ -263,8 +400,9 @@ function ColoringCanvas({
 
       coloredArea.current = Math.min(coloredArea.current + brushSize * 8, 10000);
       onProgress(Math.min(Math.round((coloredArea.current / 10000) * 100), 100));
+      onDraw();
     },
-    [selectedColor, brushSize, onProgress]
+    [selectedColor, brushSize, onProgress, onDraw]
   );
 
   return (
@@ -321,6 +459,8 @@ function ColoringScreen({
   const [soundOn, setSoundOn] = useState(true);
   const [showComplete, setShowComplete] = useState(false);
 
+  const playSound = useAudio(activeSound, soundOn);
+
   const handleProgress = (p: number) => {
     setProgress(p);
     if (p >= 80 && !showComplete) setShowComplete(true);
@@ -356,6 +496,7 @@ function ColoringScreen({
           selectedColor={selectedColor}
           brushSize={brushSize}
           onProgress={handleProgress}
+          onDraw={playSound}
         />
       </div>
 
@@ -395,10 +536,13 @@ function ColoringScreen({
             <button
               key={s.id}
               onClick={() => setActiveSound(s.id)}
-              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-body transition-all ${activeSound === s.id ? "bg-secondary/30 text-secondary border border-secondary/40" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
+              className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-body transition-all ${activeSound === s.id && soundOn ? "bg-secondary/30 text-secondary border border-secondary/40 glow-purple" : "bg-muted/50 text-muted-foreground hover:bg-muted"}`}
             >
               <span>{s.emoji}</span>
               <span>{s.label}</span>
+              {activeSound === s.id && soundOn && (
+                <SoundWave active={true} />
+              )}
             </button>
           ))}
         </div>

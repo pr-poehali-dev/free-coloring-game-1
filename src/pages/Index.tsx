@@ -202,10 +202,10 @@ const COLORING_PAGES: {
   completed: boolean; stars: number;
 }[] = [
   // ── Сказочные (оригинальные) ──────────────────────────────────────────────
-  { id:1,  title:"Единорог в лесу",      category:"Сказочные", difficulty:"Легко",  emoji:"🦄",  image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/1a3229bb-5dfe-4b11-aefa-77d2d2269762.jpg", completed:false, stars:0 },
-  { id:2,  title:"Дракон и замок",       category:"Сказочные", difficulty:"Средне", emoji:"🐉",  image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/babd0355-e561-4ba0-b8f9-35019b45b98e.jpg", completed:true,  stars:3 },
-  { id:3,  title:"Русалочка",            category:"Сказочные", difficulty:"Средне", emoji:"🧜‍♀️",image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/7e27ca32-ac6e-46e8-8cc8-6c8cd62ddb64.jpg", completed:false, stars:0 },
-  { id:4,  title:"Ведьма на метле",      category:"Сказочные", difficulty:"Сложно", emoji:"🧙‍♀️",image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/9077ae64-53ba-4886-a679-3004fd9ef22a.jpg", completed:false, stars:0 },
+  { id:1,  title:"Единорог в лесу",      category:"Сказочные", difficulty:"Легко",  emoji:"🦄",  image:IMG.unicorn,  completed:false, stars:0 },
+  { id:2,  title:"Дракон и замок",       category:"Сказочные", difficulty:"Средне", emoji:"🐉",  image:IMG.dragon,   completed:true,  stars:3 },
+  { id:3,  title:"Русалочка",            category:"Сказочные", difficulty:"Средне", emoji:"🧜‍♀️",image:IMG.mermaid,  completed:false, stars:0 },
+  { id:4,  title:"Ведьма на метле",      category:"Сказочные", difficulty:"Сложно", emoji:"🧙‍♀️",image:IMG.witch,    completed:false, stars:0 },
   { id:5,  title:"Феи и эльфы",          category:"Сказочные", difficulty:"Легко",  emoji:"🧚",  image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/93d02e51-3b73-4f1a-8f78-31f23f34af6f.jpg", completed:false, stars:0 },
   { id:6,  title:"Волшебный замок",      category:"Сказочные", difficulty:"Сложно", emoji:"🏰",  image:"https://cdn.poehali.dev/projects/e71a5a9e-694c-4ce2-8174-80b79757a686/files/93f93dc8-cde2-4034-9897-2a652c1d8beb.jpg", completed:false, stars:0 },
 
